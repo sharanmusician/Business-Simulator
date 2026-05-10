@@ -3,71 +3,73 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Executive Suite | Real-View 360</title>
+    <title>Executive Suite | GTA Walk Mode</title>
     
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.css"/>
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.js"></script>
 
     <style>
-        :root { --gold: #c5a059; --dark: #080808; --glass: rgba(15, 15, 15, 0.95); }
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #000; font-family: 'Inter', sans-serif; }
+        :root { --gold: #c5a059; --dark: #050505; --glass: rgba(20, 20, 20, 0.8); }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #000; font-family: 'Segoe UI', sans-serif; }
         #panorama { width: 100%; height: 100vh; }
 
-        /* CEO Dark UI - Loader */
+        /* Loader */
         #loader {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: var(--dark); display: flex; flex-direction: column;
             justify-content: center; align-items: center; z-index: 1000; transition: 0.8s;
         }
-        .loader-text { color: var(--gold); letter-spacing: 8px; text-transform: uppercase; font-size: 14px; margin-bottom: 20px; font-weight: 300; }
-        .line { width: 150px; height: 1px; background: #222; position: relative; }
+        .loader-bar { width: 200px; height: 1px; background: #222; position: relative; margin-top: 20px; }
         .progress { position: absolute; height: 100%; background: var(--gold); width: 0%; transition: 0.3s; }
 
-        /* Floating Info Panel */
-        #info-panel {
-            position: fixed; bottom: -100%; left: 50%; transform: translateX(-50%);
-            width: 90%; max-width: 400px; background: var(--glass);
-            border: 1px solid rgba(197, 160, 89, 0.3); border-radius: 12px;
-            padding: 24px; color: #fff; z-index: 500; transition: 0.5s cubic-bezier(0.2, 1, 0.3, 1);
-            box-shadow: 0 20px 40px rgba(0,0,0,0.6); margin-bottom: 20px;
+        /* GTA ANALOG JOYSTICK */
+        #joystick-container {
+            position: fixed; bottom: 50px; left: 50px; width: 120px; height: 120px;
+            background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 50%; z-index: 500; touch-action: none;
+            display: flex; align-items: center; justify-content: center;
+            backdrop-filter: blur(5px);
         }
-        #info-panel.active { bottom: 20px; }
-        #info-panel h2 { color: var(--gold); margin: 0 0 8px 0; font-size: 18px; font-weight: 400; }
-        #info-panel p { font-size: 14px; color: #aaa; line-height: 1.6; margin: 0; }
-        .close { position: absolute; top: 15px; right: 15px; cursor: pointer; color: #555; }
+        #joystick-knob {
+            width: 50px; height: 50px; background: var(--glass);
+            border: 1.5px solid var(--gold); border-radius: 50%;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5); pointer-events: none;
+        }
 
-        /* Hotspot Styling */
-        .hotspot { height: 18px; width: 18px; background: none; border: 1.5px solid var(--gold); border-radius: 50%; cursor: pointer; transition: 0.3s; }
-        .hotspot:hover { background: var(--gold); box-shadow: 0 0 15px var(--gold); }
+        /* UI Controls */
+        #compass { position: fixed; top: 30px; right: 30px; width: 45px; height: 45px; opacity: 0.7; z-index: 400; transition: 0.1s linear; }
+        
+        /* Popup Panel */
+        #info-panel {
+            position: fixed; top: 30px; left: 50%; transform: translateX(-50%);
+            width: 80%; max-width: 350px; background: var(--glass);
+            border-bottom: 2px solid var(--gold); padding: 15px 25px;
+            color: #fff; z-index: 600; border-radius: 10px;
+            display: none; text-align: center; backdrop-filter: blur(10px);
+        }
 
-        /* Controls */
-        .nav-ui { position: fixed; top: 30px; right: 30px; z-index: 400; display: flex; flex-direction: column; gap: 15px; align-items: center; }
-        #compass { width: 40px; height: 40px; opacity: 0.6; transition: 0.1s linear; }
-        .zoom-ctrl { width: 40px; height: 40px; background: var(--glass); border: 1px solid #333; color: #fff; border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
-
-        /* Hide Branding */
+        .hotspot { height: 20px; width: 20px; border: 1px solid var(--gold); border-radius: 50%; cursor: pointer; background: rgba(197, 160, 89, 0.1); }
         .pnlm-load-box, .pnlm-logo, .pnlm-compass, .pnlm-zoom-controls { display: none !important; }
     </style>
 </head>
 <body>
 
     <div id="loader">
-        <div class="loader-text">Initializing Suite</div>
-        <div class="line"><div class="progress" id="bar"></div></div>
+        <div style="color:var(--gold); letter-spacing:5px; text-transform:uppercase; font-size:12px;">Entering Aethercore</div>
+        <div class="loader-bar"><div class="progress" id="bar"></div></div>
     </div>
 
     <div id="panorama"></div>
 
-    <div class="nav-ui">
-        <svg id="compass" viewBox="0 0 100 100"><path d="M50 5 L65 45 L50 40 L35 45 Z" fill="#c5a059"/><path d="M50 95 L35 55 L50 60 L65 55 Z" fill="#333"/></svg>
-        <div class="zoom-ctrl" onclick="viewer.setHfov(viewer.getHfov() - 7)">+</div>
-        <div class="zoom-ctrl" onclick="viewer.setHfov(viewer.getHfov() + 7)">-</div>
+    <div id="joystick-container">
+        <div id="joystick-knob"></div>
     </div>
 
+    <svg id="compass" viewBox="0 0 100 100"><path d="M50 5 L65 45 L50 40 L35 45 Z" fill="#c5a059"/><path d="M50 95 L35 55 L50 60 L65 55 Z" fill="#333"/></svg>
+
     <div id="info-panel">
-        <span class="close" onclick="closeInfo()">&times;</span>
-        <h2 id="title">Location</h2>
-        <p id="desc"></p>
+        <h3 id="title" style="margin:0; font-size:16px; color:var(--gold); font-weight:400;"></h3>
+        <p id="desc" style="margin:5px 0 0; font-size:13px; color:#ccc;"></p>
     </div>
 
     <script>
@@ -76,47 +78,87 @@
             "panorama": "room.jpg",
             "autoLoad": true,
             "showControls": false,
-            
-            /* ANTI-STRETCH SETTINGS */
-            "hfov": 75,         // The "Sweet Spot": Normal human focal length (no stretch)
-            "minHfov": 50,      // Limits zoom-in to keep detail
-            "maxHfov": 85,      // Limits zoom-out to prevent "fisheye" warping
-            "pitch": 0,         // Starts at horizontal eye level
-            "yaw": 0,
-            "haov": 360, "vaov": 180, // Full sphere coverage
-            
+            "hfov": 80, "minHfov": 40, "maxHfov": 100,
+            "friction": 0.1,
             "hotSpots": [
-                { "pitch": -15, "yaw": -5, "cssClass": "hotspot", "clickHandlerFunc": showInfo, "clickHandlerArgs": { "t": "CEO Desk", "d": "Solid obsidian-glass workspace with integrated biometric security." } },
-                { "pitch": -10, "yaw": 40, "cssClass": "hotspot", "clickHandlerFunc": showInfo, "clickHandlerArgs": { "t": "Call Assistant", "d": "Dedicated encrypted line to the executive concierge team." } },
-                { "pitch": 5, "yaw": 140, "cssClass": "hotspot", "clickHandlerFunc": showInfo, "clickHandlerArgs": { "t": "Skyline View", "d": "Uninterrupted views of the central business district." } }
+                { "pitch": -15, "yaw": -10, "cssClass": "hotspot", "clickHandlerFunc": showInfo, "clickHandlerArgs": { "t": "CEO Desk", "d": "Private workspace." } },
+                { "pitch": -10, "yaw": 30, "cssClass": "hotspot", "clickHandlerFunc": showInfo, "clickHandlerArgs": { "t": "Comm Link", "d": "Encrypted assistant line." } }
             ]
         });
 
-        // Rotation & UI Logic
-        viewer.on('render', () => {
-            document.getElementById('compass').style.transform = `rotate(${-viewer.getYaw()}deg)`;
-        });
+        // JOYSTICK LOGIC
+        const joystick = document.getElementById('joystick-container');
+        const knob = document.getElementById('joystick-knob');
+        let rect = joystick.getBoundingClientRect();
+        let isDragging = false;
+        let moveX = 0, moveY = 0;
 
+        const handleMove = (e) => {
+            if (!isDragging) return;
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            
+            let x = clientX - rect.left - rect.width / 2;
+            let y = clientY - rect.top - rect.height / 2;
+            
+            const distance = Math.min(Math.sqrt(x*x + y*y), 50);
+            const angle = Math.atan2(y, x);
+            
+            moveX = (Math.cos(angle) * distance) / 50;
+            moveY = (Math.sin(angle) * distance) / 50;
+            
+            knob.style.transform = `translate(${moveX * 40}px, ${moveY * 40}px)`;
+        };
+
+        const stopMove = () => {
+            isDragging = false;
+            moveX = 0; moveY = 0;
+            knob.style.transform = `translate(0,0)`;
+        };
+
+        joystick.addEventListener('mousedown', () => isDragging = true);
+        joystick.addEventListener('touchstart', (e) => { isDragging = true; e.preventDefault(); });
+        window.addEventListener('mousemove', handleMove);
+        window.addEventListener('touchmove', handleMove);
+        window.addEventListener('mouseup', stopMove);
+        window.addEventListener('touchend', stopMove);
+
+        // WALK SIMULATION LOOP
+        function updateMovement() {
+            if (moveX !== 0 || moveY !== 0) {
+                // Vertical move (Y) = Walk Forward/Backward (Zoom)
+                const currentZoom = viewer.getHfov();
+                viewer.setHfov(currentZoom + (moveY * 1.5));
+                
+                // Horizontal move (X) = Rotate Panning
+                const currentYaw = viewer.getYaw();
+                viewer.setYaw(currentYaw + (moveX * 2));
+            }
+            document.getElementById('compass').style.transform = `rotate(${-viewer.getYaw()}deg)`;
+            requestAnimationFrame(updateMovement);
+        }
+        updateMovement();
+
+        // UI 
         function showInfo(e, data) {
+            const p = document.getElementById('info-panel');
             document.getElementById('title').innerText = data.t;
             document.getElementById('desc').innerText = data.d;
-            document.getElementById('info-panel').classList.add('active');
+            p.style.display = 'block';
+            setTimeout(() => { p.style.display = 'none'; }, 3000);
         }
 
-        function closeInfo() { document.getElementById('info-panel').classList.remove('active'); }
-        viewer.on('mousedown', closeInfo);
-
-        // Professional Loader
+        // Loader
         let p = 0;
-        let t = setInterval(() => {
-            p += Math.random() * 20;
-            if (p >= 100) {
-                p = 100; clearInterval(t);
-                setTimeout(() => { document.getElementById('loader').style.opacity = '0'; 
-                setTimeout(() => document.getElementById('loader').style.display='none', 800); }, 500);
-            }
+        let itv = setInterval(() => {
+            p += 10;
             document.getElementById('bar').style.width = p + '%';
-        }, 150);
+            if (p >= 100) {
+                clearInterval(itv);
+                setTimeout(() => { document.getElementById('loader').style.opacity='0'; 
+                setTimeout(() => document.getElementById('loader').style.display='none', 800); }, 400);
+            }
+        }, 100);
     </script>
 </body>
 </html>
