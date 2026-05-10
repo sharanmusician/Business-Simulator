@@ -3,162 +3,173 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Executive Suite | GTA Walk Mode</title>
+    <title>Aethercore | GTA Walk Mode</title>
     
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.css"/>
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.js"></script>
 
     <style>
-        :root { --gold: #c5a059; --dark: #050505; --glass: rgba(20, 20, 20, 0.8); }
+        :root { --gold: #c5a059; --dark: #050505; --glass: rgba(15, 15, 15, 0.85); }
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #000; font-family: 'Segoe UI', sans-serif; }
-        #panorama { width: 100%; height: 100vh; }
+        #panorama { width: 100%; height: 100vh; cursor: crosshair; }
 
-        /* Loader */
+        /* GTA HUB UI */
         #loader {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: var(--dark); display: flex; flex-direction: column;
-            justify-content: center; align-items: center; z-index: 1000; transition: 0.8s;
+            justify-content: center; align-items: center; z-index: 1000; transition: 1s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        .loader-bar { width: 200px; height: 1px; background: #222; position: relative; margin-top: 20px; }
-        .progress { position: absolute; height: 100%; background: var(--gold); width: 0%; transition: 0.3s; }
+        .loader-bar { width: 200px; height: 2px; background: #1a1a1a; margin-top: 20px; overflow: hidden; }
+        .progress { height: 100%; background: var(--gold); width: 0%; transition: 0.2s; box-shadow: 0 0 10px var(--gold); }
 
-        /* GTA ANALOG JOYSTICK */
-        #joystick-container {
-            position: fixed; bottom: 50px; left: 50px; width: 120px; height: 120px;
-            background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 50%; z-index: 500; touch-action: none;
+        /* ANALOG STICK - GTA V STYLE */
+        #ui-layer { position: fixed; inset: 0; pointer-events: none; z-index: 500; }
+        #joystick-zone {
+            position: absolute; bottom: 40px; left: 40px; width: 150px; height: 150px;
+            background: radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 70%);
+            border-radius: 50%; pointer-events: auto; touch-action: none;
             display: flex; align-items: center; justify-content: center;
-            backdrop-filter: blur(5px);
         }
-        #joystick-knob {
-            width: 50px; height: 50px; background: var(--glass);
-            border: 1.5px solid var(--gold); border-radius: 50%;
-            box-shadow: 0 0 20px rgba(0,0,0,0.5); pointer-events: none;
+        #stick-base { width: 80px; height: 80px; border: 1px solid rgba(197, 160, 89, 0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+        #stick-knob {
+            width: 45px; height: 45px; background: var(--glass); 
+            border: 1px solid var(--gold); border-radius: 50%;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5); transition: transform 0.05s linear;
         }
 
-        /* UI Controls */
-        #compass { position: fixed; top: 30px; right: 30px; width: 45px; height: 45px; opacity: 0.7; z-index: 400; transition: 0.1s linear; }
+        /* COMPASS & HUD */
+        #hud-top { position: absolute; top: 30px; right: 30px; display: flex; align-items: center; gap: 20px; }
+        #compass { width: 50px; height: 50px; filter: drop-shadow(0 0 5px rgba(0,0,0,0.5)); }
+
+        /* INTERACTIVE POPUP */
+        #overlay-msg {
+            position: absolute; top: 15%; left: 50%; transform: translateX(-50%);
+            background: var(--glass); padding: 15px 40px; border-left: 3px solid var(--gold);
+            color: white; opacity: 0; transition: 0.5s; pointer-events: none; text-align: center;
+            backdrop-filter: blur(10px);
+        }
+        #overlay-msg.visible { opacity: 1; top: 10%; }
+
+        /* HOTSPOTS */
+        .pnlm-hotspot-base { cursor: pointer !important; }
+        .ceo-marker { width: 12px; height: 12px; background: var(--gold); border-radius: 50%; box-shadow: 0 0 0 4px rgba(197,160,89,0.2); }
         
-        /* Popup Panel */
-        #info-panel {
-            position: fixed; top: 30px; left: 50%; transform: translateX(-50%);
-            width: 80%; max-width: 350px; background: var(--glass);
-            border-bottom: 2px solid var(--gold); padding: 15px 25px;
-            color: #fff; z-index: 600; border-radius: 10px;
-            display: none; text-align: center; backdrop-filter: blur(10px);
-        }
-
-        .hotspot { height: 20px; width: 20px; border: 1px solid var(--gold); border-radius: 50%; cursor: pointer; background: rgba(197, 160, 89, 0.1); }
+        /* HIDE BRANDING */
         .pnlm-load-box, .pnlm-logo, .pnlm-compass, .pnlm-zoom-controls { display: none !important; }
     </style>
 </head>
 <body>
 
     <div id="loader">
-        <div style="color:var(--gold); letter-spacing:5px; text-transform:uppercase; font-size:12px;">Entering Aethercore</div>
+        <div style="color:var(--gold); letter-spacing:8px; font-weight:300; font-size:14px;">AETHERCORE INTERACTIVE</div>
         <div class="loader-bar"><div class="progress" id="bar"></div></div>
     </div>
 
     <div id="panorama"></div>
 
-    <div id="joystick-container">
-        <div id="joystick-knob"></div>
-    </div>
+    <div id="ui-layer">
+        <div id="hud-top">
+            <svg id="compass" viewBox="0 0 100 100"><path d="M50 5 L65 45 L50 40 L35 45 Z" fill="#c5a059"/><path d="M50 95 L35 55 L50 60 L65 55 Z" fill="#333"/></svg>
+        </div>
 
-    <svg id="compass" viewBox="0 0 100 100"><path d="M50 5 L65 45 L50 40 L35 45 Z" fill="#c5a059"/><path d="M50 95 L35 55 L50 60 L65 55 Z" fill="#333"/></svg>
+        <div id="joystick-zone">
+            <div id="stick-base"><div id="stick-knob"></div></div>
+        </div>
 
-    <div id="info-panel">
-        <h3 id="title" style="margin:0; font-size:16px; color:var(--gold); font-weight:400;"></h3>
-        <p id="desc" style="margin:5px 0 0; font-size:13px; color:#ccc;"></p>
+        <div id="overlay-msg">
+            <h2 id="msg-title" style="margin:0; font-size:18px; font-weight:400; color:var(--gold);"></h2>
+            <p id="msg-body" style="margin:5px 0 0; font-size:14px; color:#ccc;"></p>
+        </div>
     </div>
 
     <script>
+        // INIT VIEWER
         const viewer = pannellum.viewer('panorama', {
             "type": "equirectangular",
             "panorama": "room.jpg",
             "autoLoad": true,
             "showControls": false,
-            "hfov": 80, "minHfov": 40, "maxHfov": 100,
-            "friction": 0.1,
+            "hfov": 85, "minHfov": 35, "maxHfov": 105,
+            "friction": 0.15,
             "hotSpots": [
-                { "pitch": -15, "yaw": -10, "cssClass": "hotspot", "clickHandlerFunc": showInfo, "clickHandlerArgs": { "t": "CEO Desk", "d": "Private workspace." } },
-                { "pitch": -10, "yaw": 30, "cssClass": "hotspot", "clickHandlerFunc": showInfo, "clickHandlerArgs": { "t": "Comm Link", "d": "Encrypted assistant line." } }
+                { "pitch": -15, "yaw": -5, "cssClass": "ceo-marker", "clickHandlerFunc": triggerMsg, "clickHandlerArgs": { "t": "CEO MAIN DESK", "b": "Advanced workstation with biometric uplink." } },
+                { "pitch": -10, "yaw": 45, "cssClass": "ceo-marker", "clickHandlerFunc": triggerMsg, "clickHandlerArgs": { "t": "COMMUNICATIONS", "b": "Direct line to global operations assistant." } },
+                { "pitch": 5, "yaw": 135, "cssClass": "ceo-marker", "clickHandlerFunc": triggerMsg, "clickHandlerArgs": { "t": "NORTH VIEW", "b": "Financial district skyline access." } }
             ]
         });
 
-        // JOYSTICK LOGIC
-        const joystick = document.getElementById('joystick-container');
-        const knob = document.getElementById('joystick-knob');
-        let rect = joystick.getBoundingClientRect();
-        let isDragging = false;
+        // JOYSTICK ENGINE
+        const zone = document.getElementById('joystick-zone');
+        const knob = document.getElementById('stick-knob');
         let moveX = 0, moveY = 0;
+        let active = false;
 
-        const handleMove = (e) => {
-            if (!isDragging) return;
-            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        const updateStick = (e) => {
+            if (!active) return;
+            const pos = e.touches ? e.touches[0] : e;
+            const rect = zone.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
             
-            let x = clientX - rect.left - rect.width / 2;
-            let y = clientY - rect.top - rect.height / 2;
-            
-            const distance = Math.min(Math.sqrt(x*x + y*y), 50);
+            let x = pos.clientX - centerX;
+            let y = pos.clientY - centerY;
+            const dist = Math.min(Math.sqrt(x*x + y*y), 60);
             const angle = Math.atan2(y, x);
             
-            moveX = (Math.cos(angle) * distance) / 50;
-            moveY = (Math.sin(angle) * distance) / 50;
+            moveX = (Math.cos(angle) * dist) / 60;
+            moveY = (Math.sin(angle) * dist) / 60;
             
-            knob.style.transform = `translate(${moveX * 40}px, ${moveY * 40}px)`;
+            knob.style.transform = `translate(${moveX * 35}px, ${moveY * 35}px)`;
         };
 
-        const stopMove = () => {
-            isDragging = false;
-            moveX = 0; moveY = 0;
-            knob.style.transform = `translate(0,0)`;
-        };
+        zone.addEventListener('touchstart', (e) => { active = true; e.preventDefault(); });
+        zone.addEventListener('mousedown', () => active = true);
+        window.addEventListener('touchmove', updateStick);
+        window.addEventListener('mousemove', updateStick);
+        window.addEventListener('touchend', () => { active = false; moveX = 0; moveY = 0; knob.style.transform = 'translate(0,0)'; });
+        window.addEventListener('mouseup', () => { active = false; moveX = 0; moveY = 0; knob.style.transform = 'translate(0,0)'; });
 
-        joystick.addEventListener('mousedown', () => isDragging = true);
-        joystick.addEventListener('touchstart', (e) => { isDragging = true; e.preventDefault(); });
-        window.addEventListener('mousemove', handleMove);
-        window.addEventListener('touchmove', handleMove);
-        window.addEventListener('mouseup', stopMove);
-        window.addEventListener('touchend', stopMove);
-
-        // WALK SIMULATION LOOP
-        function updateMovement() {
-            if (moveX !== 0 || moveY !== 0) {
-                // Vertical move (Y) = Walk Forward/Backward (Zoom)
-                const currentZoom = viewer.getHfov();
-                viewer.setHfov(currentZoom + (moveY * 1.5));
-                
-                // Horizontal move (X) = Rotate Panning
+        // GAME LOOP (WALK SIMULATION)
+        function gameLoop() {
+            if (active) {
+                // PANNING (Look Left/Right)
                 const currentYaw = viewer.getYaw();
-                viewer.setYaw(currentYaw + (moveX * 2));
+                viewer.setYaw(currentYaw + (moveX * 2.5));
+
+                // WALKING (Simulated by Focal Depth)
+                const currentZoom = viewer.getHfov();
+                // moveY < 0 is forward, moveY > 0 is backward
+                viewer.setHfov(currentZoom + (moveY * 1.8));
             }
+
+            // Sync Compass
             document.getElementById('compass').style.transform = `rotate(${-viewer.getYaw()}deg)`;
-            requestAnimationFrame(updateMovement);
+            requestAnimationFrame(gameLoop);
         }
-        updateMovement();
+        gameLoop();
 
-        // UI 
-        function showInfo(e, data) {
-            const p = document.getElementById('info-panel');
-            document.getElementById('title').innerText = data.t;
-            document.getElementById('desc').innerText = data.d;
-            p.style.display = 'block';
-            setTimeout(() => { p.style.display = 'none'; }, 3000);
+        // UI HELPERS
+        function triggerMsg(e, data) {
+            const box = document.getElementById('overlay-msg');
+            document.getElementById('msg-title').innerText = data.t;
+            document.getElementById('msg-body').innerText = data.b;
+            box.classList.add('visible');
+            setTimeout(() => box.classList.remove('visible'), 4000);
         }
 
-        // Loader
+        // LOADER
         let p = 0;
-        let itv = setInterval(() => {
-            p += 10;
-            document.getElementById('bar').style.width = p + '%';
+        const intrvl = setInterval(() => {
+            p += Math.random() * 15;
             if (p >= 100) {
-                clearInterval(itv);
-                setTimeout(() => { document.getElementById('loader').style.opacity='0'; 
-                setTimeout(() => document.getElementById('loader').style.display='none', 800); }, 400);
+                p = 100; clearInterval(intrvl);
+                setTimeout(() => {
+                    document.getElementById('loader').style.opacity = '0';
+                    setTimeout(() => document.getElementById('loader').style.display='none', 1000);
+                }, 500);
             }
-        }, 100);
+            document.getElementById('bar').style.width = p + '%';
+        }, 120);
     </script>
 </body>
 </html>
