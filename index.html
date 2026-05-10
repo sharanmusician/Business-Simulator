@@ -3,199 +3,71 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Executive Suite | 360 View</title>
+    <title>Executive Suite | Real-View 360</title>
     
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.css"/>
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.js"></script>
 
     <style>
-        :root {
-            --gold: #c5a059;
-            --dark-bg: #0a0a0a;
-            --glass: rgba(20, 20, 20, 0.9);
-            --text: #e0e0e0;
-        }
+        :root { --gold: #c5a059; --dark: #080808; --glass: rgba(15, 15, 15, 0.95); }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #000; font-family: 'Inter', sans-serif; }
+        #panorama { width: 100%; height: 100vh; }
 
-        body, html {
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            background-color: var(--dark-bg);
-            font-family: 'Segoe UI', sans-serif;
-        }
-
-        #panorama {
-            width: 100%;
-            height: 100vh;
-        }
-
-        /* Premium Loading Screen */
+        /* CEO Dark UI - Loader */
         #loader {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: var(--dark-bg);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-            transition: opacity 1s ease;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--dark); display: flex; flex-direction: column;
+            justify-content: center; align-items: center; z-index: 1000; transition: 0.8s;
         }
+        .loader-text { color: var(--gold); letter-spacing: 8px; text-transform: uppercase; font-size: 14px; margin-bottom: 20px; font-weight: 300; }
+        .line { width: 150px; height: 1px; background: #222; position: relative; }
+        .progress { position: absolute; height: 100%; background: var(--gold); width: 0%; transition: 0.3s; }
 
-        .loader-logo {
-            color: var(--gold);
-            font-size: 22px;
-            letter-spacing: 10px;
-            text-transform: uppercase;
-            margin-bottom: 25px;
-            font-weight: 300;
-        }
-
-        .loader-bar {
-            width: 180px;
-            height: 1px;
-            background: #222;
-            position: relative;
-        }
-
-        .loader-progress {
-            position: absolute;
-            height: 100%;
-            background: var(--gold);
-            width: 0%;
-            transition: width 0.4s ease;
-        }
-
-        /* Minimalist Navigation Indicator */
-        #compass {
-            position: fixed;
-            top: 30px;
-            right: 30px;
-            width: 40px;
-            height: 40px;
-            background: url('data:image/svg+xml;utf8,<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><path d="M50 2 L60 48 L50 42 L40 48 Z" fill="%23c5a059"/><path d="M50 98 L40 52 L50 58 L60 52 Z" fill="%23444"/></svg>');
-            background-size: contain;
-            z-index: 400;
-            transition: transform 0.1s linear;
-            pointer-events: none;
-            opacity: 0.8;
-        }
-
-        /* Premium Popup Panel */
+        /* Floating Info Panel */
         #info-panel {
-            position: fixed;
-            bottom: -350px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 85%;
-            max-width: 450px;
-            background: var(--glass);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(197, 160, 89, 0.2);
-            border-radius: 20px 20px 0 0;
-            padding: 30px;
-            color: var(--text);
-            z-index: 500;
-            transition: bottom 0.6s cubic-bezier(0.19, 1, 0.22, 1);
-            box-shadow: 0 -20px 50px rgba(0,0,0,0.8);
+            position: fixed; bottom: -100%; left: 50%; transform: translateX(-50%);
+            width: 90%; max-width: 400px; background: var(--glass);
+            border: 1px solid rgba(197, 160, 89, 0.3); border-radius: 12px;
+            padding: 24px; color: #fff; z-index: 500; transition: 0.5s cubic-bezier(0.2, 1, 0.3, 1);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.6); margin-bottom: 20px;
         }
+        #info-panel.active { bottom: 20px; }
+        #info-panel h2 { color: var(--gold); margin: 0 0 8px 0; font-size: 18px; font-weight: 400; }
+        #info-panel p { font-size: 14px; color: #aaa; line-height: 1.6; margin: 0; }
+        .close { position: absolute; top: 15px; right: 15px; cursor: pointer; color: #555; }
 
-        #info-panel.active { bottom: 0; }
+        /* Hotspot Styling */
+        .hotspot { height: 18px; width: 18px; background: none; border: 1.5px solid var(--gold); border-radius: 50%; cursor: pointer; transition: 0.3s; }
+        .hotspot:hover { background: var(--gold); box-shadow: 0 0 15px var(--gold); }
 
-        #info-panel h2 {
-            margin: 0 0 12px 0;
-            color: var(--gold);
-            font-weight: 400;
-            font-size: 1.3rem;
-            letter-spacing: 1px;
-        }
+        /* Controls */
+        .nav-ui { position: fixed; top: 30px; right: 30px; z-index: 400; display: flex; flex-direction: column; gap: 15px; align-items: center; }
+        #compass { width: 40px; height: 40px; opacity: 0.6; transition: 0.1s linear; }
+        .zoom-ctrl { width: 40px; height: 40px; background: var(--glass); border: 1px solid #333; color: #fff; border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
 
-        .close-panel {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            cursor: pointer;
-            color: #888;
-            font-size: 24px;
-        }
-
-        /* Custom Hotspot Marker */
-        .custom-hotspot {
-            height: 20px;
-            width: 20px;
-            background: rgba(197, 160, 89, 0.2);
-            border: 1px solid var(--gold);
-            border-radius: 50%;
-            cursor: pointer;
-            transition: all 0.4s ease;
-        }
-        
-        .custom-hotspot:hover {
-            background: var(--gold);
-            box-shadow: 0 0 15px var(--gold);
-            transform: scale(1.3);
-        }
-
-        /* CEO Dark UI Controls */
-        .controls {
-            position: fixed;
-            bottom: 40px;
-            right: 30px;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            z-index: 400;
-        }
-
-        .btn {
-            width: 44px;
-            height: 44px;
-            background: var(--glass);
-            border: 1px solid rgba(255,255,255,0.05);
-            color: white;
-            border-radius: 12px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            cursor: pointer;
-            font-size: 18px;
-            backdrop-filter: blur(10px);
-            transition: 0.3s;
-        }
-
-        .btn:hover { background: rgba(197, 160, 89, 0.4); border-color: var(--gold); }
-
-        /* Hide Default Branding */
-        .pnlm-container { background: #000 !important; }
-        .pnlm-load-box, .pnlm-logo, .pnlm-compass, .pnlm-zoom-controls, .pnlm-fullscreen-button {
-            display: none !important;
-        }
+        /* Hide Branding */
+        .pnlm-load-box, .pnlm-logo, .pnlm-compass, .pnlm-zoom-controls { display: none !important; }
     </style>
 </head>
 <body>
 
     <div id="loader">
-        <div class="loader-logo">Aethercore Suite</div>
-        <div class="loader-bar"><div class="loader-progress" id="progress"></div></div>
+        <div class="loader-text">Initializing Suite</div>
+        <div class="line"><div class="progress" id="bar"></div></div>
     </div>
 
     <div id="panorama"></div>
-    <div id="compass"></div>
 
-    <div class="controls">
-        <div class="btn" onclick="viewer.setHfov(viewer.getHfov() - 10)">+</div>
-        <div class="btn" onclick="viewer.setHfov(viewer.getHfov() + 10)">-</div>
+    <div class="nav-ui">
+        <svg id="compass" viewBox="0 0 100 100"><path d="M50 5 L65 45 L50 40 L35 45 Z" fill="#c5a059"/><path d="M50 95 L35 55 L50 60 L65 55 Z" fill="#333"/></svg>
+        <div class="zoom-ctrl" onclick="viewer.setHfov(viewer.getHfov() - 7)">+</div>
+        <div class="zoom-ctrl" onclick="viewer.setHfov(viewer.getHfov() + 7)">-</div>
     </div>
 
     <div id="info-panel">
-        <span class="close-panel" onclick="closePanel()">&times;</span>
-        <h2 id="panel-title">Location</h2>
-        <p id="panel-desc">Description will appear here.</p>
+        <span class="close" onclick="closeInfo()">&times;</span>
+        <h2 id="title">Location</h2>
+        <p id="desc"></p>
     </div>
 
     <script>
@@ -204,78 +76,47 @@
             "panorama": "room.jpg",
             "autoLoad": true,
             "showControls": false,
-            "friction": 0.1,
             
-            /* NATURAL VIEW SETTINGS - Prevents Fisheye */
-            "hfov": 80,       // Starts at a natural human eye perspective
-            "minHfov": 45,    // Maximum zoom in
-            "maxHfov": 95,    // Maximum zoom out (stops before walls warp)
-            "pitch": 0,       // Keeps horizon level
+            /* ANTI-STRETCH SETTINGS */
+            "hfov": 75,         // The "Sweet Spot": Normal human focal length (no stretch)
+            "minHfov": 50,      // Limits zoom-in to keep detail
+            "maxHfov": 85,      // Limits zoom-out to prevent "fisheye" warping
+            "pitch": 0,         // Starts at horizontal eye level
+            "yaw": 0,
+            "haov": 360, "vaov": 180, // Full sphere coverage
             
             "hotSpots": [
-                {
-                    "pitch": -12, "yaw": 0,
-                    "cssClass": "custom-hotspot",
-                    "createTooltipFunc": addLabel, "createTooltipArgs": "CEO Desk",
-                    "clickHandlerFunc": openPanel,
-                    "clickHandlerArgs": { "title": "CEO Desk", "desc": "Bespoke executive workspace featuring dark walnut finishes and integrated smart-home automation interfaces." }
-                },
-                {
-                    "pitch": -8, "yaw": 35,
-                    "cssClass": "custom-hotspot",
-                    "createTooltipFunc": addLabel, "createTooltipArgs": "Call Assistant",
-                    "clickHandlerFunc": openPanel,
-                    "clickHandlerArgs": { "title": "Assistant Comms", "desc": "Encrypted direct-link communication module for global operations and personal executive support." }
-                },
-                {
-                    "pitch": 10, "yaw": 110,
-                    "cssClass": "custom-hotspot",
-                    "createTooltipFunc": addLabel, "createTooltipArgs": "Skyline View",
-                    "clickHandlerFunc": openPanel,
-                    "clickHandlerArgs": { "title": "City Skyline", "desc": "Unobstructed views of the financial district from the primary executive floor." }
-                }
+                { "pitch": -15, "yaw": -5, "cssClass": "hotspot", "clickHandlerFunc": showInfo, "clickHandlerArgs": { "t": "CEO Desk", "d": "Solid obsidian-glass workspace with integrated biometric security." } },
+                { "pitch": -10, "yaw": 40, "cssClass": "hotspot", "clickHandlerFunc": showInfo, "clickHandlerArgs": { "t": "Call Assistant", "d": "Dedicated encrypted line to the executive concierge team." } },
+                { "pitch": 5, "yaw": 140, "cssClass": "hotspot", "clickHandlerFunc": showInfo, "clickHandlerArgs": { "t": "Skyline View", "d": "Uninterrupted views of the central business district." } }
             ]
         });
 
-        // Sync Compass and Close Panel on Drag
-        viewer.on('mousedown', closePanel);
+        // Rotation & UI Logic
         viewer.on('render', () => {
-            const yaw = viewer.getYaw();
-            document.getElementById('compass').style.transform = `rotate(${-yaw}deg)`;
+            document.getElementById('compass').style.transform = `rotate(${-viewer.getYaw()}deg)`;
         });
 
-        // Modern Loader Logic
-        let loadProg = 0;
-        const loadTimer = setInterval(() => {
-            loadProg += Math.floor(Math.random() * 15) + 5;
-            if (loadProg >= 100) {
-                loadProg = 100;
-                clearInterval(loadTimer);
-                setTimeout(() => {
-                    document.getElementById('loader').style.opacity = '0';
-                    setTimeout(() => { document.getElementById('loader').style.display = 'none'; }, 1000);
-                }, 400);
-            }
-            document.getElementById('progress').style.width = loadProg + '%';
-        }, 150);
-
-        // UI Logic
-        function addLabel(div, text) {
-            const label = document.createElement('span');
-            label.innerHTML = text;
-            label.style.cssText = "position:absolute; width:120px; color:#c5a059; font-size:10px; text-transform:uppercase; left:-50px; top:-25px; text-align:center; letter-spacing:1px; pointer-events:none; opacity:0.7;";
-            div.appendChild(label);
-        }
-
-        function openPanel(e, data) {
-            document.getElementById('panel-title').innerText = data.title;
-            document.getElementById('panel-desc').innerText = data.desc;
+        function showInfo(e, data) {
+            document.getElementById('title').innerText = data.t;
+            document.getElementById('desc').innerText = data.d;
             document.getElementById('info-panel').classList.add('active');
         }
 
-        function closePanel() {
-            document.getElementById('info-panel').classList.remove('active');
-        }
+        function closeInfo() { document.getElementById('info-panel').classList.remove('active'); }
+        viewer.on('mousedown', closeInfo);
+
+        // Professional Loader
+        let p = 0;
+        let t = setInterval(() => {
+            p += Math.random() * 20;
+            if (p >= 100) {
+                p = 100; clearInterval(t);
+                setTimeout(() => { document.getElementById('loader').style.opacity = '0'; 
+                setTimeout(() => document.getElementById('loader').style.display='none', 800); }, 500);
+            }
+            document.getElementById('bar').style.width = p + '%';
+        }, 150);
     </script>
 </body>
 </html>
